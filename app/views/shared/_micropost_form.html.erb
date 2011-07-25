@@ -1,3 +1,18 @@
+<div class="count">
+  <%= text_field_tag :micropost_count, "140", :disabled => true, :size => 1,
+                                              :id => 'char_count' %>
+  <% content_for :script do %>
+    <script type="text/javascript">
+      function update_char_count()
+      {
+        $('char_count').value = 140 - $F('micropost_content').length;
+      }
+      Event.observe(window, 'load', function() {
+        new Form.Element.Observer('micropost_content', 0.10, update_char_count);
+      });
+    </script>
+  <% end %>
+</div>
 <%= form_for @micropost do |f| %>
   <%= render 'shared/error_messages', :object => f.object %>
   <div class="field">
