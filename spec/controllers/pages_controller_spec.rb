@@ -8,35 +8,57 @@ describe PagesController do
   end
 
   describe "GET 'home'" do
-    it "should be successful" do
-      get 'home'
-      response.should be_success
+
+    describe "when not signed in" do
+
+      before(:each) do
+        get :home
+      end
+
+      it "should be successful" do
+        response.should be_success
+      end
+
+      it "should have the right title" do
+        response.should have_selector("title",
+                                      :content => "#{@base_title} | Home")
+      end
     end
 
-    it "should have the right title" do
-      get 'home'
-      response.should have_selector("title",
-                                    :content => @base_title + " | Home")
-    end
-
-    describe "as signed in user" do
+    describe "when signed in" do
 
       before(:each) do
         @user = test_sign_in(Factory(:user))
-        @mp1 = Factory(:micropost, :user => @user, :content => "Foo bar")
+        other_user = Factory(:user, :email => Factory.next(:email))
+        other_user.follow!(@user)
       end
 
-      it "should show the user's micropost count (singular)" do
-        get 'home'
-        response.should have_selector("span.microposts",
-                                      :content => "1 micropost")
+      it "should have the right follower/following counts" do
+        get :home
+        response.should have_selector("a", :href => following_user_path(@user),
+                                           :content => "0 following")
+        response.should have_selector("a", :href => followers_user_path(@user),
+                                           :content => "1 follower")
       end
 
-      it "should show the user's micropost count (plural)" do
-        mp2 = Factory(:micropost, :user => @user, :content => "Bar bazz")
-        get 'home'
-        response.should have_selector("span.microposts",
-                                      :content => "2 microposts")
+      describe "micropost counts" do
+
+        before(:each) do
+          @mp1 = Factory(:micropost, :user => @user, :content => "Foo bar")
+        end
+
+        it "should show the user's micropost count (singular)" do
+          get 'home'
+          response.should have_selector("span.microposts",
+                                        :content => "1 micropost")
+        end
+
+        it "should show the user's micropost count (plural)" do
+          mp2 = Factory(:micropost, :user => @user, :content => "Bar bazz")
+          get 'home'
+          response.should have_selector("span.microposts",
+                                        :content => "2 microposts")
+        end
       end
     end
   end
@@ -75,13 +97,6 @@ describe PagesController do
       get 'help'
       response.should have_selector("title",
                                     :content => @base_title + " | Help")
-    end
-  end
-
-  describe "GET 'home'" do
-    it "should be successful" do
-      get 'home'
-      response.should be_success
     end
   end
 end
